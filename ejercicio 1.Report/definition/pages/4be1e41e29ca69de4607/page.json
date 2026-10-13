@@ -1,0 +1,9 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "4be1e41e29ca69de4607",
+  "displayName": "Página 1",
+  "displayOption": "FitToPage",
+  "height": 1440,
+  "width": 2560,
+  "type": "Tooltip"
+}
