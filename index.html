@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Ventas de Café - Ejercicio 1 (HDB-)</title>
-    <!-- Librería Chart.js y plugin para Treemap -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@2.3.0/dist/chartjs-chart-treemap.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -19,11 +16,10 @@
             padding: 15px;
             color: #333;
         }
-        /* Cuadrícula 2x2 idéntica a tu lienzo de Power BI */
         .lienzo-pbi {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            grid-template-rows: 460px 460px;
+            grid-template-rows: 470px 470px;
             gap: 15px;
             max-width: 1600px;
             margin: 0 auto;
@@ -31,44 +27,128 @@
         .tarjeta-visual {
             background-color: #ffffff;
             border-radius: 4px;
-            padding: 15px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            padding: 14px 18px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
-        /* Fondo grisáceo como el de tus visuales izquierdos en Power BI */
         .fondo-gris {
             background-color: #e6e6e6;
         }
         .titulo-azul {
             text-align: center;
             color: #0078d4;
-            font-size: 1rem;
+            font-size: 0.98rem;
             font-weight: 600;
         }
         .titulo-negro {
             text-align: center;
             color: #000000;
-            font-size: 1rem;
+            font-size: 0.98rem;
             font-weight: 700;
         }
         .subtitulo {
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             color: #605e5c;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
-        .contenedor-grafico {
+
+        /* --- 1. ESTILOS BARRAS HORIZONTALES ROJAS --- */
+        .contenedor-barras {
             flex: 1;
-            position: relative;
-            width: 100%;
-            height: 100%;
-            min-height: 0;
+            overflow-y: auto;
+            padding-right: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
+        .fila-barra {
+            display: flex;
+            align-items: center;
+            font-size: 0.7rem;
+            gap: 8px;
+        }
+        .etiqueta-card {
+            width: 125px;
+            text-align: right;
+            font-style: italic;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .pista-barra {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .barra-roja {
+            height: 8px;
+            background-color: #e60000;
+            border-radius: 1px;
+            transition: opacity 0.2s;
+        }
+        .fila-barra:hover .barra-roja {
+            opacity: 0.75;
+        }
+        .valor-mil {
+            font-size: 0.68rem;
+            color: #666;
+        }
+
+        /* --- 3. ESTILOS TREEMAP (MAPA DE ÁRBOL) --- */
+        .treemap-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 28% 24% 16% 14% 9% 9%;
+            grid-template-rows: repeat(6, 1fr);
+            gap: 2px;
+            background-color: #fff;
+            border: 1px solid #fff;
+        }
+        .nodo-tree {
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: filter 0.15s;
+        }
+        .nodo-tree:hover {
+            filter: brightness(1.12);
+        }
+
+        /* --- LEYENDA SUPERIOR PASTEL --- */
+        .leyenda-pastel {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+            font-size: 0.7rem;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .item-leyenda {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .punto-color {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
         @media (max-width: 1024px) {
             .lienzo-pbi {
                 grid-template-columns: 1fr;
-                grid-template-rows: repeat(4, 450px);
+                grid-template-rows: repeat(4, 460px);
             }
         }
     </style>
@@ -80,60 +160,193 @@
         <div class="tarjeta-visual fondo-gris">
             <div class="titulo-azul">Recuento de coffee_name</div>
             <div class="subtitulo">por card</div>
-            <div class="contenedor-grafico">
-                <canvas id="chartBarrasRojas"></canvas>
-            </div>
+            <div class="contenedor-barras" id="contenedorBarrasRojas"></div>
         </div>
 
-        <!-- 2. ARRIBA DERECHA: Columnas + Área Sombrada por Bebida -->
+        <!-- 2. ARRIBA DERECHA: Columnas + Área Sombrada Azul (SVG Nativo) -->
         <div class="tarjeta-visual">
             <div class="titulo-negro">Recuento de date</div>
             <div class="subtitulo">por coffee_name</div>
-            <div class="contenedor-grafico">
-                <canvas id="chartColumnasArea"></canvas>
+            <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+                <svg viewBox="0 0 700 340" width="100%" height="100%">
+                    <!-- Líneas guía horizontales -->
+                    <line x1="45" y1="30" x2="680" y2="30" stroke="#eee" stroke-dasharray="3,3"/>
+                    <text x="35" y="34" font-size="10" fill="#777" text-anchor="end">800</text>
+                    <line x1="45" y1="100" x2="680" y2="100" stroke="#eee" stroke-dasharray="3,3"/>
+                    <text x="35" y="104" font-size="10" fill="#777" text-anchor="end">600</text>
+                    <line x1="45" y1="170" x2="680" y2="170" stroke="#eee" stroke-dasharray="3,3"/>
+                    <text x="35" y="174" font-size="10" fill="#777" text-anchor="end">400</text>
+                    <line x1="45" y1="240" x2="680" y2="240" stroke="#eee" stroke-dasharray="3,3"/>
+                    <text x="35" y="244" font-size="10" fill="#777" text-anchor="end">200</text>
+                    <line x1="45" y1="305" x2="680" y2="305" stroke="#ddd"/>
+                    <text x="35" y="309" font-size="10" fill="#777" text-anchor="end">0</text>
+
+                    <!-- Área azul sombreada de cinta -->
+                    <path d="M 90,22 C 130,22 140,36 170,36 C 210,36 215,106 250,106 C 285,106 295,133 330,133 C 365,133 375,205 410,205 C 445,205 455,208 490,208 C 525,208 535,221 570,221 C 605,221 615,259 650,259 L 650,305 L 90,305 Z" fill="#41a5f5" opacity="0.9"/>
+
+                    <!-- Barras de cada bebida -->
+                    <rect x="75" y="22" width="30" height="283" fill="#5a3a00"><title>Americano with Milk: 824</title></rect>
+                    <rect x="155" y="36" width="30" height="269" fill="#7a5821"><title>Latte: 782</title></rect>
+                    <rect x="235" y="106" width="30" height="199" fill="#8c8c8c"><title>Americano: 578</title></rect>
+                    <rect x="315" y="133" width="30" height="172" fill="#8e67cc"><title>Cappuccino: 501</title></rect>
+                    <rect x="395" y="205" width="30" height="100" fill="#eb9d78"><title>Cortado: 292</title></rect>
+                    <rect x="475" y="208" width="30" height="97" fill="#2798cc"><title>Hot Chocolate: 282</title></rect>
+                    <rect x="555" y="221" width="30" height="84" fill="#524100"><title>Cocoa: 243</title></rect>
+                    <rect x="635" y="259" width="30" height="46" fill="#efa6aa"><title>Espresso: 134</title></rect>
+
+                    <!-- Etiquetas Eje X -->
+                    <text x="90" y="322" font-size="9.5" fill="#555" text-anchor="middle">Americano with Milk</text>
+                    <text x="170" y="322" font-size="9.5" fill="#555" text-anchor="middle">Latte</text>
+                    <text x="250" y="322" font-size="9.5" fill="#555" text-anchor="middle">Americano</text>
+                    <text x="330" y="322" font-size="9.5" fill="#555" text-anchor="middle">Cappuccino</text>
+                    <text x="410" y="322" font-size="9.5" fill="#555" text-anchor="middle">Cortado</text>
+                    <text x="490" y="322" font-size="9.5" fill="#555" text-anchor="middle">Hot Chocolate</text>
+                    <text x="570" y="322" font-size="9.5" fill="#555" text-anchor="middle">Cocoa</text>
+                    <text x="650" y="322" font-size="9.5" fill="#555" text-anchor="middle">Espresso</text>
+                </svg>
             </div>
         </div>
 
-        <!-- 3. ABAJO IZQUIERDA: Treemap (Mapa de árbol por tarjeta) -->
+        <!-- 3. ABAJO IZQUIERDA: Treemap (Mapa de Árbol) -->
         <div class="tarjeta-visual fondo-gris">
             <div class="titulo-azul">Recuento de coffee_name</div>
             <div class="subtitulo">por card</div>
-            <div class="contenedor-grafico">
-                <canvas id="chartTreemap"></canvas>
+            <div class="treemap-grid">
+                <div class="nodo-tree" style="background:#0084ff; grid-column:1; grid-row:1/3;" title="0.1290 mil">ANON-0000-0000-0012</div>
+                <div class="nodo-tree" style="background:#08299c; grid-column:1; grid-row:3/5;" title="0.1080 mil">ANON-0000-0000-0141</div>
+                <div class="nodo-tree" style="background:#df652f; grid-column:1; grid-row:5/7;" title="0.0890 mil">(En blanco)</div>
+
+                <div class="nodo-tree" style="background:#6b007b; grid-column:2; grid-row:1/3;" title="0.0770 mil">ANON-0000-0000-1163</div>
+                <div class="nodo-tree" style="background:#e044a7; grid-column:2; grid-row:3/5;" title="0.0690 mil">ANON-0000-0000-0276</div>
+                <div class="nodo-tree" style="background:#744ec2; grid-column:2; grid-row:5/6;" title="0.0670 mil">ANON-0000-0000-0009</div>
+                <div class="nodo-tree" style="background:#d9b300; grid-column:2; grid-row:6/7;" title="0.0510 mil">ANON-0000-0000-0507</div>
+
+                <div class="nodo-tree" style="background:#d64550; grid-column:3; grid-row:1/3;" title="0.0500 mil">ANON-0000-0000-0040</div>
+                <div class="nodo-tree" style="background:#2b88d8; grid-column:3; grid-row:3/4;" title="0.0310 mil">ANON-0000-0000-0003</div>
+                <div class="nodo-tree" style="background:#f59d45; grid-column:3; grid-row:4/5;" title="0.0300 mil">ANON-0000-0000-0570</div>
+                <div class="nodo-tree" style="background:#b84ec2; grid-column:3; grid-row:5/6;" title="0.0270 mil">ANON-0000-0000-1191</div>
+                <div class="nodo-tree" style="background:#ed5cb9; grid-column:3; grid-row:6/7;" title="0.0230 mil">ANON-0000-0000-0206</div>
+
+                <div class="nodo-tree" style="background:#197278; grid-column:4; grid-row:1/3;" title="0.0470 mil">ANON-0000-0000-0097</div>
+                <div class="nodo-tree" style="background:#b595fc; grid-column:4; grid-row:3/4;" title="0.0230 mil">ANON-0000-0000-1152</div>
+                <div class="nodo-tree" style="background:#4bd659; grid-column:4; grid-row:4/5;" title="0.0200 mil">ANON-0000-0000-1158</div>
+                <div class="nodo-tree" style="background:#0091ea; grid-column:4; grid-row:5/6;" title="0.0200 mil">ANON-0000-0000-1161</div>
+                <div class="nodo-tree" style="background:#ef5b0c; grid-column:4; grid-row:6/7;" title="0.0190 mil">ANON-0000-0000-0696</div>
+
+                <div class="nodo-tree" style="background:#1aab40; grid-column:5; grid-row:1/3;" title="0.0330 mil">ANON-0000-1110</div>
+                <div class="nodo-tree" style="background:#c8a400; grid-column:5; grid-row:3/5;" title="0.0220 mil">ANON-0000-0333</div>
+                <div class="nodo-tree" style="background:#9c007c; grid-column:5; grid-row:5/7;" title="0.0180 mil">ANON-0000-1167</div>
+
+                <div class="nodo-tree" style="background:#10b5e8; grid-column:6; grid-row:1/3;" title="0.0320 mil">ANON-0000-1170</div>
+                <div class="nodo-tree" style="background:#fd625e; grid-column:6; grid-row:3/5;" title="0.0210 mil">ANON-0000-0019</div>
+                <div class="nodo-tree" style="background:#01b8aa; grid-column:6; grid-row:5/7;" title="0.0200 mil">ANON-0000-0375</div>
             </div>
         </div>
 
-        <!-- 4. ABAJO DERECHA: Gráfico de Pastel (Pie Chart) -->
+        <!-- 4. ABAJO DERECHA: Gráfico de Pastel (SVG Nativo con Etiquetas) -->
         <div class="tarjeta-visual">
             <div class="titulo-negro">Recuento de date</div>
             <div class="subtitulo">por coffee_name</div>
-            <div class="contenedor-grafico">
-                <canvas id="chartPastel"></canvas>
+            <div class="leyenda-pastel">
+                <span class="item-leyenda"><i class="punto-color" style="background:#5a3a00"></i>Americano with Milk</span>
+                <span class="item-leyenda"><i class="punto-color" style="background:#7a5821"></i>Latte</span>
+                <span class="item-leyenda"><i class="punto-color" style="background:#8c8c8c"></i>Americano</span>
+                <span class="item-leyenda"><i class="punto-color" style="background:#8e67cc"></i>Cappuccino</span>
+                <span class="item-leyenda"><i class="punto-color" style="background:#eb9d78"></i>Cortado</span>
+                <span class="item-leyenda"><i class="punto-color" style="background:#2798cc"></i>Hot Chocolate</span>
+                <span class="item-leyenda"><i class="punto-color" style="background:#524100"></i>Cocoa</span>
+                <span class="item-leyenda"><i class="punto-color" style="background:#efa6aa"></i>Espresso</span>
+            </div>
+            <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+                <svg id="svgPastel" viewBox="0 0 500 300" width="100%" height="100%"></svg>
             </div>
         </div>
     </div>
 
     <script>
-        // =========================================================================
-        // DATOS EXACTOS EXTRAÍDOS DE TU POWER BI (EJERCICIO 1)
-        // =========================================================================
+        // 1. GENERAR LAS 25 BARRAS HORIZONTALES ROJAS AUTOMÁTICAMENTE
         const datosTarjetas = [
-            { card: "ANON-0000-0000-0012", mil: 0.1290, color: "#0084ff" },
-            { card: "ANON-0000-0000-0141", mil: 0.1080, color: "#08299c" },
-            { card: "(En blanco / Efectivo)", mil: 0.0890, color: "#df652f" },
-            { card: "ANON-0000-0000-1163", mil: 0.0770, color: "#6b007b" },
-            { card: "ANON-0000-0000-0276", mil: 0.0690, color: "#e044a7" },
-            { card: "ANON-0000-0000-0009", mil: 0.0670, color: "#744ec2" },
-            { card: "ANON-0000-0000-0507", mil: 0.0510, color: "#d9b300" },
-            { card: "ANON-0000-0000-0040", mil: 0.0500, color: "#d64550" },
-            { card: "ANON-0000-0000-0097", mil: 0.0470, color: "#197278" },
-            { card: "ANON-0000-0000-1110", mil: 0.0330, color: "#1aab40" },
-            { card: "ANON-0000-0000-1170", mil: 0.0320, color: "#10b5e8" },
-            { card: "ANON-0000-0000-0003", mil: 0.0310, color: "#2b88d8" },
-            { card: "ANON-0000-0000-0570", mil: 0.0300, color: "#f59d45" },
-            { card: "ANON-0000-0000-1191", mil: 0.0270, color: "#b84ec2" },
-            { card: "ANON-0000-0000-0206", mil: 0.0230, color: "#ed5cb9" },
-            { card: "ANON-0000-0000-1152", mil: 0.0230, color: "#b595fc" },
-            { card: "ANON-0000-0000-0333", mil: 0.0220, color: "#c8a400" },
-            { card: "ANON-0000-0000-0019", mil: 0.0210, color: "#fd625e" },
-            { card: "ANON-0000-0000-03
+            ["ANON-0000-0000-0012", 0.1290], ["ANON-0000-0000-0141", 0.1080],
+            ["", 0.0890], ["ANON-0000-0000-1163", 0.0770],
+            ["ANON-0000-0000-0276", 0.0690], ["ANON-0000-0000-0009", 0.0670],
+            ["ANON-0000-0000-0507", 0.0510], ["ANON-0000-0000-0040", 0.0500],
+            ["ANON-0000-0000-0097", 0.0470], ["ANON-0000-0000-1110", 0.0330],
+            ["ANON-0000-0000-1170", 0.0320], ["ANON-0000-0000-0003", 0.0310],
+            ["ANON-0000-0000-0570", 0.0300], ["ANON-0000-0000-1191", 0.0270],
+            ["ANON-0000-0000-0206", 0.0230], ["ANON-0000-0000-1152", 0.0230],
+            ["ANON-0000-0000-0333", 0.0220], ["ANON-0000-0000-0019", 0.0210],
+            ["ANON-0000-0000-0375", 0.0200], ["ANON-0000-0000-1158", 0.0200],
+            ["ANON-0000-0000-1161", 0.0200], ["ANON-0000-0000-1165", 0.0200],
+            ["ANON-0000-0000-0696", 0.0190], ["ANON-0000-0000-1167", 0.0180],
+            ["ANON-0000-0000-0001", 0.0170]
+        ];
+
+        const contenedorBarras = document.getElementById("contenedorBarrasRojas");
+        datosTarjetas.forEach(([card, valor]) => {
+            const porcentajeAncho = (valor / 0.145) * 100;
+            const fila = document.createElement("div");
+            fila.className = "fila-barra";
+            fila.innerHTML = `
+                <div class="etiqueta-card">${card}</div>
+                <div class="pista-barra">
+                    <div class="barra-roja" style="width: ${porcentajeAncho}%"></div>
+                    <span class="valor-mil">${valor.toFixed(4)} mil</span>
+                </div>
+            `;
+            contenedorBarras.appendChild(fila);
+        });
+
+        // 4. GENERAR EL GRÁFICO DE PASTEL VECTORIAL CON SUS PORCENTAJES EXACTOS
+        const datosPastel = [
+            { nombre: "Americano with Milk", val: 824, pct: "22.66%", color: "#5a3a00" },
+            { nombre: "Latte", val: 782, pct: "21.51%", color: "#7a5821" },
+            { nombre: "Americano", val: 578, pct: "15.9%", color: "#8c8c8c" },
+            { nombre: "Cappuccino", val: 501, pct: "13.78%", color: "#8e67cc" },
+            { nombre: "Cortado", val: 292, pct: "8.03%", color: "#eb9d78" },
+            { nombre: "Hot Chocolate", val: 282, pct: "7.76%", color: "#2798cc" },
+            { nombre: "Cocoa", val: 243, pct: "6.68%", color: "#524100" },
+            { nombre: "Espresso", val: 134, pct: "3.69%", color: "#efa6aa" }
+        ];
+
+        const svgPastel = document.getElementById("svgPastel");
+        const cx = 250, cy = 155, r = 105;
+        let anguloAcumulado = -Math.PI / 2;
+        const total = 3636;
+
+        datosPastel.forEach(item => {
+            const anguloRebanada = (item.val / total) * (2 * Math.PI);
+            const x1 = cx + r * Math.cos(anguloAcumulado);
+            const y1 = cy + r * Math.sin(anguloAcumulado);
+            const x2 = cx + r * Math.cos(anguloAcumulado + anguloRebanada);
+            const y2 = cy + r * Math.sin(anguloAcumulado + anguloRebanada);
+            const arcoGrande = anguloRebanada > Math.PI ? 1 : 0;
+
+            // Dibujar rebanada
+            const pathData = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${arcoGrande} 1 ${x2} ${y2} Z`;
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", pathData);
+            path.setAttribute("fill", item.color);
+            path.setAttribute("stroke", "#fff");
+            path.setAttribute("stroke-width", "1.5");
+            path.innerHTML = `<title>${item.nombre}: ${item.val} (${item.pct})</title>`;
+            svgPastel.appendChild(path);
+
+            // Calcular posición de etiqueta externa
+            const anguloMedio = anguloAcumulado + anguloRebanada / 2;
+            const lx = cx + (r + 28) * Math.cos(anguloMedio);
+            const ly = cy + (r + 22) * Math.sin(anguloMedio);
+            const texto = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            texto.setAttribute("x", lx);
+            texto.setAttribute("y", ly);
+            texto.setAttribute("font-size", "9.5");
+            texto.setAttribute("fill", "#555");
+            texto.setAttribute("text-anchor", Math.cos(anguloMedio) >= 0 ? "start" : "end");
+            texto.textContent = `${item.val} (${item.pct})`;
+            svgPastel.appendChild(texto);
+
+            anguloAcumulado += anguloRebanada;
+        });
+    </script>
+
+</body>
+</html>
