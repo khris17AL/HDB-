@@ -2,18 +2,10 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Ventas de Café - Ejercicio 1</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f3f2f1; padding: 20px; margin: 0; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1400px; margin: 0 auto; }
-        .card { background: #fff; border-radius: 6px; padding: 15px; height: 450px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow-y: auto; }
-        .gray { background: #eaeaea; }
-        h3 { text-align: center; color: #0078d4; font-size: 0.95rem; margin: 0 0 5px 0; }
-        .sub { text-align: center; font-size: 0.75rem; color: #666; margin-bottom: 12px; }
-        .bar-row { display: flex; align-items: center; font-size: 0.7rem; gap: 8px; margin-bottom: 4px; }
-        .bar-label { width: 130px; text-align: right; font-style: italic; }
-        .bar-fill { height: 8px; background: #e60000; border-radius: 1px; }
-    </style>
+    <!-- Vinculamos la hoja de estilos externa -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -22,7 +14,7 @@
         <div class="card gray">
             <h3>Recuento de coffee_name</h3>
             <div class="sub">por card</div>
-            <div id="barrasContainer"></div>
+            <div id="barrasContainer" class="contenedor-scroll"></div>
         </div>
 
         <!-- Cuadro 2: Área Azul -->
@@ -50,15 +42,15 @@
         <div class="card gray">
             <h3>Recuento de coffee_name</h3>
             <div class="sub">por card</div>
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); height: 350px; gap: 3px;">
-                <div style="background:#0084ff; color:#fff; padding:8px; font-size:0.7rem;">ANON-0012<br><b>0.1290</b></div>
-                <div style="background:#08299c; color:#fff; padding:8px; font-size:0.7rem;">ANON-0141<br><b>0.1080</b></div>
-                <div style="background:#df652f; color:#fff; padding:8px; font-size:0.7rem;">(Blanco)<br><b>0.0890</b></div>
-                <div style="background:#6b007b; color:#fff; padding:8px; font-size:0.7rem;">ANON-1163<br><b>0.0770</b></div>
-                <div style="background:#e044a7; color:#fff; padding:8px; font-size:0.7rem;">ANON-0276<br><b>0.0690</b></div>
-                <div style="background:#744ec2; color:#fff; padding:8px; font-size:0.7rem;">ANON-0009<br><b>0.0670</b></div>
-                <div style="background:#d9b300; color:#fff; padding:8px; font-size:0.7rem;">ANON-0507<br><b>0.0510</b></div>
-                <div style="background:#d64550; color:#fff; padding:8px; font-size:0.7rem;">ANON-0040<br><b>0.0500</b></div>
+            <div class="treemap-box">
+                <div class="nodo" style="background:#0084ff;">ANON-0012<br><b>0.1290</b></div>
+                <div class="nodo" style="background:#08299c;">ANON-0141<br><b>0.1080</b></div>
+                <div class="nodo" style="background:#df652f;">(Blanco)<br><b>0.0890</b></div>
+                <div class="nodo" style="background:#6b007b;">ANON-1163<br><b>0.0770</b></div>
+                <div class="nodo" style="background:#e044a7;">ANON-0276<br><b>0.0690</b></div>
+                <div class="nodo" style="background:#744ec2;">ANON-0009<br><b>0.0670</b></div>
+                <div class="nodo" style="background:#d9b300;">ANON-0507<br><b>0.0510</b></div>
+                <div class="nodo" style="background:#d64550;">ANON-0040<br><b>0.0500</b></div>
             </div>
         </div>
 
@@ -66,7 +58,7 @@
         <div class="card">
             <h3>Recuento de date</h3>
             <div class="sub">por coffee_name</div>
-            <div style="padding: 20px; font-size: 0.85rem; line-height: 1.8;">
+            <div class="resumen-texto">
                 <p><b>Americano with Milk:</b> 824 (22.66%)</p>
                 <p><b>Latte:</b> 782 (21.51%)</p>
                 <p><b>Americano:</b> 578 (15.9%)</p>
@@ -77,20 +69,7 @@
         </div>
     </div>
 
-    <script>
-        const datos = [
-            ["ANON-0012", 0.1290], ["ANON-0141", 0.1080], ["(En blanco)", 0.0890],
-            ["ANON-1163", 0.0770], ["ANON-0276", 0.0690], ["ANON-0009", 0.0670],
-            ["ANON-0507", 0.0510], ["ANON-0040", 0.0500], ["ANON-0097", 0.0470],
-            ["ANON-1110", 0.0330], ["ANON-1170", 0.0320], ["ANON-0003", 0.0310]
-        ];
-        const cont = document.getElementById("barrasContainer");
-        datos.forEach(([c, v]) => {
-            const div = document.createElement("div");
-            div.className = "bar-row";
-            div.innerHTML = `<div class="bar-label">${c}</div><div style="flex:1"><div class="bar-fill" style="width:${v * 600}%"></div></div><span>${v}</span>`;
-            cont.appendChild(div);
-        });
-    </script>
+    <!-- Vinculamos el archivo JavaScript externo -->
+    <script src="dashboard.js"></script>
 </body>
 </html>
